@@ -2,6 +2,7 @@ import numpy as np
 from helperfunctions import add_pose_from_global, add_landmark_measurement_from_global
 import gtsam
 from gtsam.symbol_shorthand import L, X
+import math
 
 PRIOR_NOISE = gtsam.noiseModel.Diagonal.Sigmas(np.array([0.1, 0.1, 0.05]))  # (x, y, theta)
 ODOMETRY_NOISE = gtsam.noiseModel.Diagonal.Sigmas(np.array([0.2, 0.2, 0.1]))  # (dx, dy, dtheta)
@@ -77,7 +78,7 @@ marginals_all = [0.171074495968235,0.24233781081188036,
 def minimize_errors(graph, initial_estimate, pose_options):
     #TODO: try different pose and landmark options here, and keep the one with the lowest resulting error.
     best_pose = "a"      # chosen pose option
-    best_landmark = 1    # chosen landmark (1 or 2)
+    best_landmark =1  # chosen landmark (1 or 2)
     pose_5 = pose_options[best_pose]
     graph, initial_estimate = add_pose(graph, initial_estimate, pose_5)
     result = optimize(graph, initial_estimate)
@@ -85,7 +86,23 @@ def minimize_errors(graph, initial_estimate, pose_options):
     result = optimize(graph, initial_estimate)
 
     # TODO: create a list of errors (each index corresponds to a pose) and add the error of each pose to the list
-    list_of_errors = []
+    X1_expected=[0,0,0]
+    X2_expected=[2,0,0]
+    X3_expected=[4,0,0]
+    mse_X1 = math.sqrt((result.atPose2(X(1)).x()-X1_expected[0])**2+(result.atPose2(X(1)).y()-X1_expected[1])**2+(result.atPose2(X(1)).theta()-X1_expected[2])**2)
+    mse_X2 = math.sqrt((result.atPose2(X(2)).x()-X2_expected[0])**2+(result.atPose2(X(2)).y()-X2_expected[1])**2+(result.atPose2(X(2)).theta()-X2_expected[2])**2)
+    mse_X3 = math.sqrt((result.atPose2(X(3)).x()-X3_expected[0])**2+(result.atPose2(X(3)).y()-X3_expected[1])**2+(result.atPose2(X(3)).theta()-X3_expected[2])**2)
+    list_of_errors = [mse_X1,mse_X2,mse_X3]
     # TODO: compute the sum of the errors and return it along with the best pose and landmark
-    sum_of_errors = 0
+    sum_of_errors = sum(list_of_errors)
     return best_pose, best_landmark, sum_of_errors 
+
+''' in the form a1, a2,
+                b1, b2,
+                c1, c2
+                d1, d2'''
+
+errors_all = [5.6556162809631295e-14,9.394809571020249e-14,
+              1.620476923155442e-13,9.411397978436133e-14,
+              7.98016360666638e-14,9.490452426877979e-14,
+              8.07952014568578e-14,9.452985973530391e-14]
